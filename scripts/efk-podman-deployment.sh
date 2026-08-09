@@ -8,18 +8,18 @@ echo "vm.max_map_count=262144" | sudo tee /etc/sysctl.d/99-elasticsearch.conf
 # Makes the setting persistent across system reboots
 
 echo "--- Confirming [1/4] ---"
-cat /proc/sys/vm/max_cap_count
+cat /proc/sys/vm/max_map_count
 echo "Expected Output = 262144"
 
 echo "--- [2/4] Creating BTRFS Partition & Target Directories ---"
 if [ ! -d "/mnt/efk_stack" ]; then
   sudo btrfs subvolume create /mnt/efk_stack
 # Creates the dedicated BTRFS partition
-  sudo btrfs quota enable /mnt/efk_stack
-# Enables the quota subsystem globally on the filesystem path
-  sudo btrfs limit 100g /mnt/efk_stack
-# Enforces a strict limit of 100 GB
 fi
+sudo btrfs quota enable /mnt/efk_stack
+# Enables the quota subsystem globally on the filesystem path
+sudo btrfs qgroup limit 100g /mnt/efk_stack
+# Enforces a strict limit of 100 GB
 
 sudo chown -R "$USER:$USER" /mnt/efk_stack
 # Transfers ownership to local user, allowing for necessary clearance
@@ -59,7 +59,7 @@ if ! podman container exists elasticsearch; then
   -e "xpack.security.enabled=false" \
   -e "xpack.security.http.ssl.enabled=false" \
   -e "ES_JAVA_OPTS=-Xms512m -Xmx512m" \
-  -v /mnt/efk_stack/elasticsearch:usr/share/elasticsearch/data:Z \
+  -v /mnt/efk_stack/elasticsearch:/usr/share/elasticsearch/data:Z \
   docker.elastic.co/elasticsearch/elasticsearch:9.4.2
 fi
 
