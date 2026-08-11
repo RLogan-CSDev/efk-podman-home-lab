@@ -44,3 +44,10 @@ The EFK stack is pulled into the `efk-pod` container through their own separate 
 * **Start/Stop Stack**: `podman pod start efk-pod` / `podman pod stop efk-pod`
 * **Check Disk Usage**: `sudo btrfs qgroup show -r /mnt/efk_stack`
 * **Confirm Kernel VM Limit**: `sysctl vm.max_map_count`
+
+---
+
+## Benchmarking
+Created an Abstract Data Type (ADT) for logging data metrics specific to analyzing Big-O runtime performance. Those data metrics include the **name of the function being analyzed**, which often times might utilize a specific algorithm, the **size of the input** into the function, and the **duration of the run time** in which the function runs. For proper Big-O analysis, the `input_size` becomes the x-variable and the `duration_ms` (measured in milliseconds) becomes the y-variable in a standard xy-coordinate graph.
+
+**NOTE**: The executable/binary file for the program should simply be copied over to the `benchmark` directory. Since the constructor defaults to the `logs/benchmark.log` file path, the executable must be ran in the `benchmark` directory when invoking the `BenchmarkLogger` ADT.
