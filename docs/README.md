@@ -11,6 +11,7 @@ This project uses an idempotent Bash script (`efk-podman-deployment.sh`) to hand
 ---
 
 ## System Architecture
+```text
 [ Host OS (Fedora Workstation) ]
     |
     |-BTRFS Partition (/mnt/efk_stack)
