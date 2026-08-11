@@ -24,7 +24,7 @@ This project uses an idempotent Bash script (`efk-podman-deployment.sh`) to hand
             |-Elasticsearch     (Port 9200 - Internal only)
             |-Filebeat          (Log Ingestion)
             |-Kibana            (Port 5601 - Open to Host)
-
+```
 ---
 
 ## Implementation Notes
