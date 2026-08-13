@@ -48,6 +48,10 @@ The EFK stack is pulled into the `efk-pod` container through their own separate 
 ---
 
 ## Benchmarking
-Created an Abstract Data Type (ADT) for logging data metrics specific to analyzing Big-O runtime performance. Those data metrics include the **name of the function being analyzed**, which often times might utilize a specific algorithm, the **size of the input** into the function, and the **duration of the run time** in which the function runs. For proper Big-O analysis, the `input_size` becomes the x-variable and the `duration_ms` (measured in milliseconds) becomes the y-variable in a standard xy-coordinate graph.
+Created an Abstract Data Type (ADT) for logging data metrics specific to analyzing Big-O runtime performance. Those data metrics include the **name of the function being analyzed**, which often times might utilize a specific algorithm, the **size of the input** into the function, and the **duration of the run time** in which the function runs. For proper Big-O analysis, the `input_size` metric becomes the x-variable and the `duration_ms` metric (measured in milliseconds) becomes the y-variable in a standard xy-coordinate graph. The title of the graph would essentially use the `function_name` metric.
 
 **NOTE**: The executable/binary file for the program should simply be copied over to the `benchmark` directory. Since the constructor defaults to the `logs/benchmark.log` file path, the executable must be ran in the `benchmark` directory when invoking the `BenchmarkLogger` ADT.
+
+**NOTE**: The log file is formatted in JSON so that Filebeat is able to pull the logs without the regex complexity.
+
+The `BenchmarkTimer` header file relates to the `BenchmarkLogger` header file through it's internal dependency. The timer depends on the logger as the timer calculates the time taken for a function to run and places that calculated value at the end of the log file.
