@@ -1,57 +1,123 @@
-# Containerized EFK Observability Stack with Storage Isolation
-An automated deployment of an Elasticsearch, Filebeat, and Kibana (EFK) observability stack on Fedora Workstation.
+# C++ Algorithmic Performance Benchmarking via Containerized, Rootless EFK Observability Stack
+Developer: Robert Logan
 
-**Objective**: Creating an environment that allows profiling in C++ applications for analysis in Big-O runtime performance.
+## Project Overview
+An automated deployment of an Elasticsearch, Filebeat, and Kibana (EFK) observability stack on Fedora Workstation with a custom C++ application that generates structured JSON telemetry in an end-to-end performance benchmark.
 
-This project uses an idempotent Bash script (`efk-podman-deployment.sh`) to handle the following:
-* **Tuning host OS kernel** virtual memory mapping max capacity to align with Elasticsearch requirements.
-* **BTRFS hard drive partitioning** to shift risk from host root filesystem during log ingestion.
-* **Container orchestration** via Fedora's native Podman package to allow network segmentation with the pod's internal communication network. *The intent with containerization is to have an on/off switch to preserve resources on a system.*
-
----
-
-## System Architecture
-```text
-[ Host OS (Fedora Workstation) ]
-    |
-    |-BTRFS Partition (/mnt/efk_stack)
-    |   |-Blast Radius Containment (protected root filesystem)
-    |   |-Elasticsearch files
-    |   |-Filebeat files
-    |   |-Kibana files
-    |-Rootless Podman Engine
-        |-[ efk-pod ] (Internal Network Communication)
-            |-Elasticsearch     (Port 9200 - Internal only)
-            |-Filebeat          (Log Ingestion)
-            |-Kibana            (Port 5601 - Open to Host)
-```
----
-
-## Implementation Notes
-1. **Configuring the virtual memory in the kernel**:
-Fedora restricts memory mapping to 65,530; however, Elasticsearch requires a minimum of 262,144 memory mappings. This is to prevent memory allocation crashes on boot, and since this only adjusts the virtual memory in the kernel, the physical RAM is not interfered with.
-2. **Setting up the partition**:
-Using the BTRFS partitioning method, sub-volumes are created to divide the big BTRFS pool that is currently keeping the entire drive. It is easier to do this since the physical volume has automatically been created already through the Fedora installation.
-3. **Initializing Podman pod**:
-The Podman container has its own internal shared network space that will allow only the EFK stack to talk with each other. Creating the container in this way allows for the practice of *Network Segmentation* so that the two distinct zones remain separated. These zones are the pod and the rest of the OS. In the pod zone, the internal network is isolated; therefore, allowing Filebeat and Kibana to communicate with Elasticsearch on `port 9200`. However, the rest of the OS cannot communicate on port 9200. The only port that the host OS is allowed to communicate with the EFK stack is through `port 5601`. This allows the host OS to access the Kibana web dashboard.
-4. **EFK stack deployment**:
-The EFK stack is pulled into the `efk-pod` container through their own separate "sub-containers" titled respectively to the function in the stack. The EFK stack configuration files are saved permanently on the sub-volume partition under `/mnt/efk_stack`. The container pod only enables active EFK data collection measures. Once the `efk-pod` is turned on, the data collection is pulled to the sub-volume. This is because the "sub-containers" are bind mounted to the partition.
+### Objective
+*Creating an environment that allows profiling in C++ applications for analysis in Big-O runtime performance telemetry. Testing the environment with a set of sorting algorithms already designed.*
 
 ---
 
-## Operational Commands
-* **Check Pod Status**: `podman pod ps`
-* **Start/Stop Stack**: `podman pod start efk-pod` / `podman pod stop efk-pod`
-* **Check Disk Usage**: `sudo btrfs qgroup show -r /mnt/efk_stack`
-* **Confirm Kernel VM Limit**: `sysctl vm.max_map_count`
+## Tech Stack
+* Fedora Workstation - Linux
+* Podman (rootless pods)
+* C++20 (std::chrono, std::algorithm)
+* Elastic Stack 9.4.2 (Elasticsearch, Filebeat, Kibana)
+* Visual Studio Code
+* Bash scripting
 
 ---
 
-## Benchmarking
-Created an Abstract Data Type (ADT) for logging data metrics specific to analyzing Big-O runtime performance. Those data metrics include the **name of the function being analyzed**, which often times might utilize a specific algorithm, the **size of the input** into the function, and the **duration of the run time** in which the function runs. For proper Big-O analysis, the `input_size` metric becomes the x-variable and the `duration_ms` metric (measured in milliseconds) becomes the y-variable in a standard xy-coordinate graph. The title of the graph would essentially use the `function_name` metric.
+## Lab Structure
+* `benchmark/` - contains C++ classes, driver file, and logs generated
+* `config` - contains a copy of the filebeat.yml file (original stored on subvolume holding EFK stack)
+* `docs` - contains pertinent documentation
+* `scripts` - contains idempotent script for automation of EFK stack setup
 
-**NOTE**: The executable/binary file for the program should simply be copied over to the `benchmark` directory. Since the constructor defaults to the `logs/benchmark.log` file path, the executable must be ran in the `benchmark` directory when invoking the `BenchmarkLogger` ADT.
+---
 
-**NOTE**: The log file is formatted in JSON so that Filebeat is able to pull the logs without the regex complexity.
+## Key Engineering Highlights
+* **System Kernel Tuning**: Virtual memory mappings had to be adjusted so that Elasticsearch can run properly with crashing.
+* **Disk Partitioning**: Using the BTRFS partitioning method native to Fedora, risk shifts from host root filesystem during log ingestion.
+* **Container Orchestration**: Using Fedora's native Podman package allows for network segmentation using the created pod's internal communication network.
+* **Idempotent Automation**: Creating a Bash script that not only maintains a history of commands used for implementation, but also a way to re-run the script so that when updates are added, the installations/configurations already performed do not attempt to perform again.
+* **Custom C++ Application**: Modularized C++ code that uses the `std::chrono` library to create a benchmark necessary for Big-O runtime performance analysis by generating output into JSON format.
+* **Log Parsing**: Configuring Filebeat to pull data from the log file generated in the C++ application into the Elasticsearch database.
 
-The `BenchmarkTimer` header file relates to the `BenchmarkLogger` header file through it's internal dependency. The timer depends on the logger as the timer calculates the time taken for a function to run and places that calculated value at the end of the log file.
+---
+
+## System/Observability Pipeline
+1. `C++ Application` --> `benchmarks.log` --> `Filebeat ingestion` --> `Elasticsearch storage` --> `Kibana Lens`
+
+2. ***efk-pod*** [ `Filebeat container` + `Elasticsearch container` + `Kibana container` ]
+
+3. ***efk_stack*** [ `elasticsearch files` + `filebeat files` + `kibana files` ]
+
+---
+
+## Reproduction Steps
+
+#### How to create the `efk-pod` and start the stack:
+1. Change the memory map limit across system reboots
+2. Partition the hard drive using BTRFS method
+3. Initialize pod only on port 5601
+4. Deploy EFK stack
+***Check the script*** `efk-podman-deployment.sh` ***for more details about command usage.***
+
+#### How to compile and run C++ benchmark binary:
+1. Pull all .hpp and .cpp files from repo
+2. Ensure there is a `logs/` directory created with a `benchmarks.log` file inside
+3. Use the command to generate executable: `g++ -std=c++20 -I include src/main.cpp -o benchmark_experiment`
+**NOTE**: The above command assumes the following
+            - The compiler uses C++ version 20
+            - The file system structure mirrors this repo (`-I` option)
+            - The location of command execution is inside the `benchmark` directory
+4. Use the command to run executable: `./benchmark_experiment`
+5. Verify logs generated: `cat logs/benchmarks.log`
+
+#### How to load Kibana Lens:
+1. Pull `filebeat.yml` configuration file. The main file is kept inside the partition with the rest of EFK stack files. Although, for replication, the file was copied into the `config` directory.
+2. Edit the `paths` option to where the aforementioned C++ `logs/` directory was created.
+3. Edit the `efk-podman-deployment.sh` script under the **Filebeat** installation section. Change the `-v` mount options to satisfy the following format
+            - /path/to/config/filebeat.yml:/KEEP/SAME
+            - /path/to/logs:/KEEP/SAME
+4. Re-run the `efk-podman-deployment.sh` script. The `--replace` option will maintain container name while changing the mounting options.
+5. Use the command to start the pod: `podman pod start efk-pod`
+6. Verify that Elasticsearch has the telemetry using the command: `podman run --rm -it --pod efk-pod docker.elastic.co/elasticsearch/elasticsearch:9.4.2 curl -X GET "localhost:9200/_cat/indices?v"`
+**NOTE**: Since the host OS and pod have segmented networks, the only way Elasticsearch database can be retrieved is through the internal command execution inside the pod. The host OS can only communicate with the pod on port 5601. The verification is on port 9200, which is the port that Elasticsearch communicates on.
+
+> ##### Creating the Kibana Data View
+> 
+> * Visit `http://localhost:5601` to access Kibana in a web browser.
+> * On the left sidebar, click **Management** > **Stack Management**.
+> * In the *Kibana* section, click **Data Views**.
+> * Click **Create Data View**.
+> * Add a name, such as *cpp-benchmark*
+> * Add the index pattern "cpp-*"
+> **NOTE**: If there isn't anything in the right-side suggesting the index pattern can match, then repeat the above steps.
+> * Click *Save data view to Kibana*.
+>
+> ##### Building the Big-O Complexity Graph
+> * On the left sidebar, click **Analytics** > **Visualize Libary**.
+> * Click **Create Visualization** > **Lens**
+> * In top-left dropdown, select the name of the data view created before.
+> * Pull the *input_size* field to the horizontal axis.
+> * Pull the *duration_us* field to the vertical axis.
+> * Pull the *function_name.keyword* field to the Breakdown.
+> * Edit the style of the graph as desired, such as setting the *Line interpolation* setting to *Smooth*.
+
+## Results & Analysis
+
+The algorithms used are:
+[ **Bubble Sort**, **Insertion Sort**, **Quick Sort**, **std::sort** ]
+
+The independent variable is the input size N. The dependent variable is the average of the runtime measured in milliseconds. 
+The input size pool consisted of [ N = {1,000 | 2,500 | 5,000 | 10,000 | 25,000 | 50,000} ].
+Each input size for each algorithm had 20 trials ran to data accuracy.
+
+**Bubble Sort** & **Insertion Sort** produce O(N^2) complexity. **Quick Sort** & **std::sort** product O(Nlog(N)) complexity. 
+
+After the C++ application ran, the Kibana Lens line graphs were produced.
+
+![Kibana Lens Visual](images/sorting-algorithms-visuals.png)
+
+* The linear scale on the y-axis shows the same relationships in the theoretical complexity trajectories in asymptotic analysis. For example, the only difference is that the **Bubble Sort** algorithm has a slower performance than the **Insertion Sort** by a constant factor.
+
+* The logarithmic scale on the y-axis shows differences in the growth rates by orders of magnitude. This means that the quadratic algorithms are slower by multiplicative factors of 10 compared to the linearithmic algorithms.
+
+* **Linear Scale** answers the question: *"How much real-world time does an operation cost?"*
+* **Logarithmic Scale** answers the question: *"How efficient is the algorithm's design?"*
+
+***Overall Assessment***
+Unless the sorting algorithm has been optimized, the fastest way to sort data in this study is presented as the standard C++ library `algorithm` via the function `std::sort()`

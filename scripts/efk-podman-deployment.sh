@@ -74,10 +74,13 @@ fi
 # 3. Filebeat 9.4.2
 # The ro flag gives read-only access to Filebeat on Podman's default log
 # log directory and the log directory created under $HOME
+# UPDATE: changed the mounting points for Filebeat to include the config file and the log path to ingest
+# UPDATE: allows updated config, maintaining the same container name
 if ! podman container exists filebeat; then
   podman run -d --pod efk-pod --name filebeat \
-  -v ~/.local/share/containers/storage/overlay-containers:/var/log/containers:ro,z \
-  -v "$HOME/logs:/var/log/host_apps:ro,z" \
+  --replace \
+  -v /mnt/efk_stack/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro,z \
+  -v /home/rolo/HomeLab/benchmark/logs:/var/log/benchmark:ro,z \
   docker.elastic.co/beats/filebeat:9.4.2
 fi
 echo "-- Confirming [4/4] ---"

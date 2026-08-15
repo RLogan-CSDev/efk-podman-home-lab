@@ -26,7 +26,7 @@ vector<int> randNumGen(int size) {
 
 int main() {
     // 1. Experiment parameters - 20 trials at each input size
-    vector<int> inputSizes = {1000, 2500, 5000, 10000};
+    vector<int> inputSizes = {1000, 2500, 5000, 10000, 25000, 50000};
     const int K_TRAILS = 20;
 
     // 2. Instantiate Logger and Sorting Algorithm objects

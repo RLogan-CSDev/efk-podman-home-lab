@@ -1,0 +1,38 @@
+# C++ Resources:
+
+***chrono Library:
+BenchmarkTimer.hpp
+- https://www.cplusplus.com/reference/chrono
+- https://www.geeksforgeeks.org/cpp/chrono-in-c
+
+***ofstream Library:
+BenchmarkLogger.hpp
+- https://www.cplusplus.com/reference/fstream/ofstream/ofstream
+
+***vector & random Library:
+main.cpp
+- https://www.geeksforgeeks.org/cpp/how-to-generate-a-vector-with-random-values-in-c/
+
+***algorithm Library
+sort function
+- https://www.cplusplus.com/reference/algorithm/sort/
+
+***Sorting Algorithms:
+SorthingAlgorithms.hpp
+"Data Structures and Algorithm Analysis" by Clifford A. Shaffer, pages 234, 236, 246, & 247.
+
+***Fedora compiler:
+Terminal command
+https://www.developer.fedoraproject.org/tech/languages/c/cpp_installation.html
+
+-----
+
+# EFK Stack Resources:
+***Filebeat configuration:
+- https://www.elastic.co/docs/reference/beats/filebeat/configuring-howto-filebeat
+
+***Podman commands:
+- https://docs.podman.io/en/v4.3/Commands.html
+
+***ELK Bootstrap Checks (see script > EFK deployment options):
+- https://www.elastic.co/docs/deploy-manage/deploy/self-managed/bootstrap-checks

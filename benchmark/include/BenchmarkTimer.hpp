@@ -47,7 +47,7 @@ public:
             currentTime = endTime;
         }
         
-        auto elapsedTime = duration_cast<chrono::milliseconds>(currentTime - startTime);
+        auto elapsedTime = duration_cast<chrono::microseconds>(currentTime - startTime);
 
         return elapsedTime.count();
     }

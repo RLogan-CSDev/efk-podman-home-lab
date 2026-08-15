@@ -1,0 +1,34 @@
+filebeat.inputs:
+  - type: filestream
+    id: benchmark-experiment-us
+    paths:
+      - /var/log/benchmark/benchmarks_microseconds.log
+    fields:
+      time_unit: "us"
+    fields_under_root: true
+    parsers:
+      - ndjson:
+          target: ""
+          overwrite_keys: true
+          add_error_keys: true
+
+  - type: filestream
+    id: benchmark-experiment-ms
+    paths:
+      - /var/log/benchmark/benchmarks_milliseconds.log
+    fields:
+      time_unit: "ms"
+    fields_under_root: true
+    parsers:
+      - ndjson:
+          target: ""
+          overwrite_keys: true
+          add_error_keys: true
+
+output.elasticsearch:
+  hosts: ["localhost:9200"]
+  index: "cpp-benchmark-%{[agent.version]}-%{[time_unit]}-%{+yyyy.MM.dd}"
+
+setup.ilm.enabled: false
+setup.template.name: "cpp-benchmarks"
+setup.template.pattern: "cpp-benchmarks-*"
